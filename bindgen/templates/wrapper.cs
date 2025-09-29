@@ -28,6 +28,9 @@
 {%- for imported_class in self.imports() %}
 using {{ imported_class }};
 {%- endfor %}
+{%- for external_package in config.external_packages.values() %}
+using {{ external_package }};
+{%- endfor %}
 
 {%- call cs::docstring_value(ci.namespace_docstring(), 0) %}
 namespace {{ config.namespace() }};
@@ -36,10 +39,14 @@ namespace {{ config.namespace() }};
 using {{ alias.alias }} = {{ alias.original_type }};
 {%- endfor %}
 
+{%- if config.external_packages.is_empty() || self.should_include_infrastructure() %}
 {% include "RustBufferTemplate.cs" %}
 {% include "FfiConverterTemplate.cs" %}
 {% include "Helpers.cs" %}
 {% include "BigEndianStream.cs" %}
+{%- else %}
+{{- self.add_import(&self.get_primary_infrastructure_namespace()) }}
+{%- endif %}
 
 // Contains loading, initialization code,
 // and the FFI Function declarations in a com.sun.jna.Library.

@@ -10,6 +10,14 @@ pub struct ExternalCodeType {
     name: String,
 }
 
+impl ExternalCodeType {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+        }
+    }
+}
+
 impl CodeType for ExternalCodeType {
     fn type_label(&self, _ci: &ComponentInterface) -> String {
         self.name.clone()

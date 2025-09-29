@@ -74,7 +74,7 @@ pub struct Config {
     #[serde(default)]
     custom_types: HashMap<String, CustomTypeConfig>,
     #[serde(default)]
-    external_packages: HashMap<String, String>,
+    pub external_packages: HashMap<String, String>,
     global_methods_class_name: Option<String>,
     access_modifier: Option<String>,
     null_string_to_empty: Option<bool>,
@@ -248,6 +248,32 @@ impl<'a> CsWrapper<'a> {
 
     pub fn type_aliases(&self) -> Vec<TypeAlias> {
         self.type_aliases.iter().cloned().collect()
+    }
+
+    pub fn should_include_infrastructure(&self) -> bool {
+        // If we have no external packages, always include infrastructure
+        if self.config.external_packages.is_empty() {
+            return true;
+        }
+
+        // Include infrastructure if this is the "primary" namespace
+        // We determine this by choosing the first namespace alphabetically
+        // among all external packages plus this namespace
+        let current_namespace = &self.config.namespace();
+        let mut all_namespaces: Vec<&String> = self.config.external_packages.values().collect();
+        all_namespaces.push(current_namespace);
+        all_namespaces.sort();
+
+        all_namespaces.first() == Some(&current_namespace)
+    }
+
+    pub fn get_primary_infrastructure_namespace(&self) -> String {
+        let current_namespace = &self.config.namespace();
+        let mut all_namespaces: Vec<&String> = self.config.external_packages.values().collect();
+        all_namespaces.push(current_namespace);
+        all_namespaces.sort();
+
+        format!("using {};", all_namespaces.first().unwrap())
     }
 }
 
